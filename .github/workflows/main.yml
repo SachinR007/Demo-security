@@ -17,12 +17,21 @@ jobs:
         run: |
           docker build -t todo-app:latest .
 
-      - name: Scan Docker Image with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'todo-app:latest'
-          format: 'table'
-          severity: 'CRITICAL,HIGH'
+      # - name: Scan Docker Image with Trivy
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: 'todo-app:latest'
+      #     format: 'table'
+      #     severity: 'CRITICAL,HIGH'
+
+      - name: Scan Docker Image with Trivy (to file)
+        run: |
+         docker run --rm \
+         -v /var/run/docker.sock:/var/run/docker.sock \
+         -v $(pwd):/root/reports \
+         aquasec/trivy:latest \
+         image --severity CRITICAL,HIGH --format table -o /root/reports/trivy-report.txt todo-app:latest
+
 
       - name: Upload Trivy Scan Report (Optional)
         uses: actions/upload-artifact@v4

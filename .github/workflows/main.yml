@@ -30,9 +30,14 @@ jobs:
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v $(pwd):/root/reports \
           aquasec/trivy:latest \
-          image --severity CRITICAL,HIGH,MEDIUM,LOW \
-          --format table -o /root/reports/trivy-report.txt \
+          image \
+          --scanners vuln \
+          --vuln-type os \
+          --format table \
+          --severity CRITICAL,HIGH,MEDIUM,LOW \
+          -o /root/reports/trivy-report.txt \
           todo-app:latest
+
       
 
       - name: Upload Trivy Scan Report (Optional)

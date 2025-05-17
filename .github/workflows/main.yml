@@ -27,13 +27,13 @@ jobs:
       - name: Scan Docker Image with Trivy (Formatted Table)
         run: |
          docker run --rm \
-         -v /var/run/docker.sock:/var/run/docker.sock \
-         aquasec/trivy:latest \
-         image --severity CRITICAL,HIGH,MEDIUM,LOW \
-         --format table \
-         todo-app:latest
-
-
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v $(pwd):/root/reports \
+          aquasec/trivy:latest \
+          image --severity CRITICAL,HIGH,MEDIUM,LOW \
+          --format table -o /root/reports/trivy-report.txt \
+          todo-app:latest
+      
 
       - name: Upload Trivy Scan Report (Optional)
         uses: actions/upload-artifact@v4

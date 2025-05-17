@@ -24,13 +24,15 @@ jobs:
       #     format: 'table'
       #     severity: 'CRITICAL,HIGH'
 
-      - name: Scan Docker Image with Trivy (to file)
+      - name: Scan Docker Image with Trivy (Formatted Table)
         run: |
          docker run --rm \
          -v /var/run/docker.sock:/var/run/docker.sock \
-         -v $(pwd):/root/reports \
          aquasec/trivy:latest \
-         image --severity CRITICAL,HIGH --format table -o /root/reports/trivy-report.txt todo-app:latest
+         image --severity CRITICAL,HIGH,MEDIUM,LOW \
+         --format table \
+         todo-app:latest
+
 
 
       - name: Upload Trivy Scan Report (Optional)

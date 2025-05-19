@@ -1,51 +1,45 @@
-name: CI with SonarQube on GitHub Runner
+name: CI - DevSecOps Pipeline
 
 on:
   push:
     branches: [main]
 
 jobs:
-  sonar-analysis:
+  build-test-scan:
+    name: Build, Test, and Scan Docker App
     runs-on: ubuntu-latest
 
-    services:
-      sonarqube:
-        image: sonarqube:community
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd="curl -s http://localhost:9000/api/system/health | grep -q 'GREEN'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Wait for SonarQube to be ready
+      - name: Build Docker Image
         run: |
-          for i in {1..10}; do
-            if curl -s http://localhost:9000/api/system/status | grep -q '"status":"UP"'; then
-              echo "SonarQube is up!"
-              break
-            fi
-            echo "Waiting for SonarQube..."
-            sleep 10
-          done
+          docker build -t todo-app:latest .
+      # - name: Scan Docker Image with Trivy
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: 'todo-app:latest'
+      #     format: 'table'
+      #     severity: 'CRITICAL,HIGH'
 
-      - name: Install SonarScanner
+      - name: Scan Docker Image with Trivy (Formatted Table)
         run: |
-          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip sonar-scanner.zip -d $HOME
-          echo "$HOME/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
+         docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v $(pwd):/root/reports \
+          aquasec/trivy:latest \
+          image \
+          --scanners vuln \
+          --vuln-type os \
+          --format table \
+          --severity CRITICAL,HIGH,MEDIUM,LOW \
+          -o /root/reports/trivy-report.txt \
+          todo-app:latest
+      
 
-      - name: Run SonarQube scan
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=my-project \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=$SONAR_TOKEN
+      - name: Upload Trivy Scan Report (Optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.txt

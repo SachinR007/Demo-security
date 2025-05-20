@@ -1,42 +1,39 @@
-// Requiring module
-const assert = require('assert');
+const request = require("supertest");
+const assert = require("assert");
+const app = require("../app"); // adjust path if app is in a subfolder
 
-// We can group similar tests inside a describe block
-describe("Simple Calculations", () => {
-before(() => {
-	console.log( "This part executes once before all tests" );
-});
+describe("ToDo App Basic Tests", () => {
 
-after(() => {
-	console.log( "This part executes once after all tests" );
-});
-	
-// We can add nested blocks for different tests
-describe( "Test1", () => {
-	beforeEach(() => {
-	console.log( "executes before every test" );
-	});
-	
-	it("Is returning 5 when adding 2 + 3", () => {
-	assert.equal(2 + 3, 5);
-	});
+  it("GET /todo should return 200", async () => {
+    const res = await request(app).get("/todo");
+    assert.strictEqual(res.status, 200);
+  });
 
-	it("Is returning 6 when multiplying 2 * 3", () => {
-	assert.equal(2*3, 6);
-	});
-});
+  it("POST /todo/add/ should add a new todo item", async () => {
+    const res = await request(app)
+      .post("/todo/add/")
+      .send("newtodo=LearnTesting");
 
-describe("Test2", () => {
-	beforeEach(() => {
-	console.log( "executes before every test" );
-	});
-	
-	it("Is returning 4 when adding 2 + 3", () => {
-	assert.equal(2 + 3, 5);
-	});
+    assert.strictEqual(res.status, 302); // redirection to /todo
+  });
 
-	it("Is returning 8 when multiplying 2 * 4", () => {
-	assert.equal(2*4, 8);
-	});
-});
+  it("GET /todo/0 should show the first todo item", async () => {
+    const res = await request(app).get("/todo/0");
+    assert.strictEqual(res.status, 200);
+    assert.ok(res.text.includes("LearnTesting"));
+  });
+
+  it("PUT /todo/edit/0 should update the first todo item", async () => {
+    const res = await request(app)
+      .post("/todo/edit/0?_method=PUT")
+      .send("editTodo=LearnMocha");
+
+    assert.strictEqual(res.status, 302); // redirection to /todo
+  });
+
+  it("GET /todo/delete/0 should delete the first todo item", async () => {
+    const res = await request(app).get("/todo/delete/0");
+    assert.strictEqual(res.status, 302); // redirection to /todo
+  });
+
 });

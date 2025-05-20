@@ -1,6 +1,6 @@
 const request = require("supertest");
 const assert = require("assert");
-const app = require("../app"); // adjust path if app is in a subfolder
+const app = require("./app"); // adjust path if app is in a subfolder
 
 describe("ToDo App Basic Tests", () => {
 
